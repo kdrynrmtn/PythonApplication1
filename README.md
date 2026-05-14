@@ -5,25 +5,47 @@ Bu sebeple D þýkkýndan ilerlmeye karar verdim.
 
 ```mermaid
 classDiagram
-    class Hesaplayici {
-        <<abstract>>
-        +islem_yap()
+    %% Adapter Pattern
+    class OdemeArayuzu {
+        <<interface>>
+        +odeme_al()
     }
-    class IndirimHesaplayici {
-        +islem_yap()
+    class IyzicoDisSistem {
+        +iyzico_ile_ode()
     }
-    class KargoHesaplayici {
-        +islem_yap()
+    class IyzicoAdapter {
+        +odeme_al()
     }
-    class ServisFabrikasi {
-        +servis_olustur()
+    class OdemeKontrolProxy {
+        +odeme_al()
     }
-    class ETicaretUygulamasi {
-        +siparisiTamamla()
-    }
+    
+    OdemeArayuzu <|-- IyzicoAdapter
+    OdemeArayuzu <|-- OdemeKontrolProxy
+    OdemeKontrolProxy o-- OdemeArayuzu : Kontrol Eder
+    IyzicoAdapter --> IyzicoDisSistem : Çevirir
 
-    Hesaplayici <|-- IndirimHesaplayici
-    Hesaplayici <|-- KargoHesaplayici
-    ServisFabrikasi ..> IndirimHesaplayici
-    ServisFabrikasi ..> KargoHesaplayici
-    ETicaretUygulamasi --> ServisFabrikasi
+    %% Decorator Pattern
+    class SepetBileseni {
+        <<interface>>
+        +get_toplam()
+        +get_detay()
+    }
+    class StandartSepet {
+        +get_toplam()
+    }
+    class SepetDecorator {
+        +get_toplam()
+    }
+    class HediyePaketiDecorator {
+        +get_toplam()
+    }
+    class SigortaDecorator {
+        +get_toplam()
+    }
+    
+    SepetBileseni <|-- StandartSepet
+    SepetBileseni <|-- SepetDecorator
+    SepetDecorator o-- SepetBileseni : Sarmalar
+    SepetDecorator <|-- HediyePaketiDecorator
+    SepetDecorator <|-- SigortaDecorator

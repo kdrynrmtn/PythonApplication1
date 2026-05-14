@@ -27,11 +27,9 @@ class Musteri:
     def getEposta(self): return self.eposta
     def getIsim(self): return self.isim
 
-
 class Hesaplayici(ABC):
     @abstractmethod
-    def islem_yap(self, **kwargs):
-        pass
+    def islem_yap(self, **kwargs): pass
 
 class IndirimHesaplayici(Hesaplayici):
     def islem_yap(self, sepetUrunleri, indirimKodu, aktifMusteri):
@@ -56,7 +54,6 @@ class KargoHesaplayici(Hesaplayici):
         if aktifMusteri.getUyelikTipi() == "PLATIN" and indirimliFiyat > 500: kargoUcreti = 0
         return kargoUcreti
 
-
 class ServisFabrikasi:
     @staticmethod
     def servis_olustur(servis_tipi):
@@ -64,44 +61,112 @@ class ServisFabrikasi:
         elif servis_tipi == "kargo": return KargoHesaplayici()
         return None
 
+class OdemeArayuzu(ABC):
+    @abstractmethod
+    def odeme_al(self, miktar, musteri): pass
 
+class IyzicoDisSistem:
+    def iyzico_ile_ode(self, email, miktar):
+        print(f"[IYZICO API] {email} hesabindan {miktar:.2f} TL basariyla cekildi.")
 
-class OdemeIslemi:
-    def odemeYap(self, odemeYontemi, sonTutar):
-        print(f"Odeme Yontemi: {odemeYontemi}, Tutar: {sonTutar}")
+class IyzicoAdapter(OdemeArayuzu):
+    def __init__(self):
+        self.iyzico = IyzicoDisSistem()
+    def odeme_al(self, miktar, musteri):
+        self.iyzico.iyzico_ile_ode(musteri.getEposta(), miktar)
+
+class OdemeKontrolProxy(OdemeArayuzu):
+    def __init__(self, gercek_odeme: OdemeArayuzu):
+        self.gercek_odeme = gercek_odeme
+    def odeme_al(self, miktar, musteri):
+        if miktar > 15000:
+            print("[PROXY UYARISI] Guvenlik siniri asildi! Manuel onay gerekiyor.")
+        else:
+            print("[PROXY] Odeme guvenlik kontrolunden gecti.")
+            self.gercek_odeme.odeme_al(miktar, musteri)
+
+class SepetBileseni(ABC):
+    @abstractmethod
+    def get_toplam(self): pass
+    @abstractmethod
+    def get_detay(self): pass
+
+class StandartSepet(SepetBileseni):
+    def __init__(self, tutar):
+        self.tutar = tutar
+    def get_toplam(self): return self.tutar
+    def get_detay(self): return "Standart Sepet Tutari"
+
+class SepetDecorator(SepetBileseni):
+    def __init__(self, bilesen: SepetBileseni):
+        self.bilesen = bilesen
+    def get_toplam(self): return self.bilesen.get_toplam()
+    def get_detay(self): return self.bilesen.get_detay()
+
+class HediyePaketiDecorator(SepetDecorator):
+    def get_toplam(self): return self.bilesen.get_toplam() + 50.0
+    def get_detay(self): return self.bilesen.get_detay() + " + Hediye Paketi (+50 TL)"
+
+class SigortaDecorator(SepetDecorator):
+    def get_toplam(self): return self.bilesen.get_toplam() + 100.0
+    def get_detay(self): return self.bilesen.get_detay() + " + Kargo Sigortasi (+100 TL)"
 
 class BildirimServisi:
-    def bildirimGonder(self, aktifMusteri):
-        print(f"E-posta gonderildi: {aktifMusteri.getEposta()}")
+    def bildirimGonder(self, musteri):
+        print(f"[BILDIRIM] Onay e-postasi gonderildi: {musteri.getEposta()}")
 
 class ETicaretUygulamasi:
-    def __init__(self, aktifMusteri, kargoSehri):
+    def __init__(self, musteri, kargoSehri):
         self.sepetUrunleri = []
-        self.aktifMusteri = aktifMusteri
+        self.musteri = musteri
         self.kargoSehri = kargoSehri
         self.indirimKodu = ""
-        self.odemeYontemi = "KREDI_KARTI"
-  
-        self.indirimServisi = ServisFabrikasi.servis_olustur("indirim")
-        self.kargoServisi = ServisFabrikasi.servis_olustur("kargo")
-        self.odemeServisi = OdemeIslemi()
-        self.bildirimServisi = BildirimServisi()
+        self.indirim = ServisFabrikasi.servis_olustur("indirim")
+        self.kargo = ServisFabrikasi.servis_olustur("kargo")
+        self.bildirim = BildirimServisi()
+        
+        gercek_odeme = IyzicoAdapter()
+        self.odeme = OdemeKontrolProxy(gercek_odeme)
+        
+        self.hediye_paketi = False
+        self.sigorta = False
 
     def sepeteEkle(self, urun): self.sepetUrunleri.append(urun)
     def indirimKoduUygula(self, kod): self.indirimKodu = kod
-    def odemeYontemiSec(self, yontem): self.odemeYontemi = yontem
+    def hediye_paketi_ekle(self): self.hediye_paketi = True
+    def sigorta_ekle(self): self.sigorta = True
 
     def siparisiTamamla(self):
-        indirimliFiyat = self.indirimServisi.islem_yap(self.sepetUrunleri, self.indirimKodu, self.aktifMusteri)
-        kargoUcreti = self.kargoServisi.islem_yap(self.sepetUrunleri, self.kargoSehri, self.aktifMusteri, indirimliFiyat)
-        sonTutar = (indirimliFiyat + kargoUcreti) * 1.20 # %20 Vergi
-        self.odemeServisi.odemeYap(self.odemeYontemi, sonTutar)
-        self.bildirimServisi.bildirimGonder(self.aktifMusteri)
-        print(f"Islem tamam. Toplam: {sonTutar}")
+        print("\n--- SIPARIS ISLENIYOR ---")
+        indirimli = self.indirim.islem_yap(sepetUrunleri=self.sepetUrunleri, indirimKodu=self.indirimKodu, aktifMusteri=self.musteri)
+        kargo = self.kargo.islem_yap(sepetUrunleri=self.sepetUrunleri, kargoSehri=self.kargoSehri, aktifMusteri=self.musteri, indirimliFiyat=indirimli)
+        
+        ilk_tutar = (indirimli + kargo) * 1.20
+        
+        nihai_sepet = StandartSepet(ilk_tutar)
+        if self.hediye_paketi:
+            nihai_sepet = HediyePaketiDecorator(nihai_sepet)
+        if self.sigorta:
+            nihai_sepet = SigortaDecorator(nihai_sepet)
+            
+        sonTutar = nihai_sepet.get_toplam()
+        print(f"Siparis Detayi: {nihai_sepet.get_detay()}")
+        
+        self.odeme.odeme_al(sonTutar, self.musteri)
+        self.bildirim.bildirimGonder(self.musteri)
+        print("--- SIPARIS TAMAMLANDI ---\n")
 
+if __name__ == "__main__":
+    m = Musteri("Ali Yilmaz", "ali@mail.com", "PLATIN", 1500)
+    s = ETicaretUygulamasi(m, "ISTANBUL")
 
-musteri = Musteri("Ali Yilmaz", "ali@mail.com", "PLATIN", 1500)
-sepet = ETicaretUygulamasi(musteri, "ISTANBUL")
-sepet.sepeteEkle(Urun("U01", "Arduino", 450.0, "ELEKTRONIK", 0.2, True))
-sepet.indirimKoduUygula("TEKNOFEST_INDIRIMI")
-sepet.siparisiTamamla()
+    s.sepeteEkle(Urun("U01", "Arduino", 450, "ELEKTRONIK", 0.2, True))
+    s.sepeteEkle(Urun("U02", "Motor", 850, "ELEKTRONIK", 1.5, False))
+
+    s.indirimKoduUygula("TEKNOFEST_INDIRIMI")
+    s.hediye_paketi_ekle()
+    s.sigorta_ekle()
+    
+    s.siparisiTamamla()
+    
+    input("Cikmak icin Enter'a basin...")

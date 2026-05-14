@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>10ce3c7b-7c79-4569-ba70-2fcdb86a630e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>PythonApplication1.py</StartupFile>
+    <StartupFile>src\spagetti_code.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -32,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="docs\ai-log\phase1.md" />
+    <Content Include="docs\ai-log\phase2.md" />
     <Content Include="docs\diagrams\Ekran görüntüsü 2026-05-14 163336.png" />
     <Content Include="PATTERNS.md" />
     <Content Include="PROBLEMS.md" />

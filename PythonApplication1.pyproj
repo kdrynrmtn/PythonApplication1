@@ -31,6 +31,8 @@
     <Folder Include="src\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="docs\ai-log\phase1.md" />
+    <Content Include="docs\diagrams\Ekran görüntüsü 2026-05-14 163336.png" />
     <Content Include="PATTERNS.md" />
     <Content Include="PROBLEMS.md" />
     <Content Include="README.md" />

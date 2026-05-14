@@ -31,6 +31,7 @@
     <Folder Include="src\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="docs\ai-log\phase1.md" />
     <Content Include="PATTERNS.md" />
     <Content Include="PROBLEMS.md" />
     <Content Include="README.md" />

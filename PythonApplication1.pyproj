@@ -25,12 +25,15 @@
     <Compile Include="src\spagetti_code.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include=".github\workflows\" />
     <Folder Include="docs\" />
     <Folder Include="docs\ai-log\" />
     <Folder Include="docs\diagrams\" />
+    <Folder Include=".github\" />
     <Folder Include="src\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".github\workflows\ci.yml" />
     <Content Include="docs\ai-log\phase1.md" />
     <Content Include="docs\ai-log\phase2.md" />
     <Content Include="docs\diagrams\Ekran görüntüsü 2026-05-14 163336.png" />

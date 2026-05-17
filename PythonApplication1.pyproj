@@ -36,6 +36,7 @@
     <Content Include=".github\workflows\ci.yml" />
     <Content Include="docs\ai-log\phase1.md" />
     <Content Include="docs\ai-log\phase2.md" />
+    <Content Include="docs\ai-log\phase3.md" />
     <Content Include="docs\diagrams\Ekran görüntüsü 2026-05-14 163336.png" />
     <Content Include="docs\diagrams\Ekran görüntüsü 2026-05-14 184911.png" />
     <Content Include="PATTERNS.md" />

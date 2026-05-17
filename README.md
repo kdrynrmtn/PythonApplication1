@@ -15,7 +15,7 @@ classDiagram
     }
     class IyzicoAdapter {
         +odeme_al()
-    }
+    } 
     class OdemeKontrolProxy {
         +odeme_al()
     }

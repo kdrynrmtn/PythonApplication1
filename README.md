@@ -2,13 +2,11 @@ Evrimleþen Sistem - E-Ticaret Sepeti ve Sipariþ Yönetimi
 
 # Neden Bu Konuyu Seçtim?
 
-Listedeki diðer konular teknik olarak geliþtirilmeye açýk olsa da, benim hem kiþisel ilgimin olmasý hem de kariyer hedefim açýsýndan en doðru noktanýn E-Ticaret Sepeti olduðunu düþündüm.
-Bu projeye sadece bir "ödev" gözüyle bakmaktansa, ilgi alaným olan bir konu üzerinde çalýþmak gerçek bir mühendis bakýþ açýsýyla yaklaþmama imkan saðladý. Bu sebeple projemi D þýkký üzerinden ilerletmeye karar verdim.
+Listedeki diðer konular teknik olarak geliþtirilmeye açýk olsa da, benim hem kiþisel ilgimin olmasý hem de kariyer hedefim açýsýndan en doðru noktanýn E-Ticaret Sepeti olduðunu düþündüm. Bu projeye sadece bir "ödev" gözüyle bakmaktansa, ilgi alaným olan bir konu üzerinde çalýþmak gerçek bir mühendis bakýþ açýsýyla yaklaþmama imkan saðladý. Bu sebeple projemi D þýkký üzerinden ilerletmeye karar verdim.
 
 # Projenin Amacý ve Geliþim Süreci
 
-Baþlangýçta her þeyin tek bir ETicaretUygulamasi sýnýfý içine yýðýldýðý, indirim ve kargo hesaplamalarýnýn uzun if-else bloklarýyla yapýldýðý, birbirine sýký sýkýya baðlý bir "spagetti kod" yapým vardý.
-Üç fazlýk bu süreçte, tasarým örüntülerini (Design Patterns) kullanarak kodumu daha modüler, esnek ve geliþime açýk (SOLID prensiplerine uygun) hale getirdim.
+Baþlangýçta her þeyin tek bir ETicaretUygulamasi sýnýfý içine yýðýldýðý, indirim ve kargo hesaplamalarýnýn uzun if-else bloklarýyla yapýldýðý, birbirine sýký sýkýya baðlý bir "spagetti kod" yapým vardý. Üç fazlýk bu süreçte, tasarým örüntülerini (Design Patterns) kullanarak kodumu daha modüler, esnek ve geliþime açýk (SOLID prensiplerine uygun) hale getirdim.
 
 # Faz 1: Creational (Yaratýmsal) Tasarým
 
@@ -28,47 +26,86 @@ Strategy: O bitmek bilmeyen if-else indirim kampanyalarý döngüsünden kurtuldum. 
 
 Observer: Sipariþ tamamlandýðýnda email, SMS ve kargo firmasýna bildirim gitmesi gerekiyordu. Sistemi sýký sýkýya baðlamak yerine sipariþi "Yayýncý", servisleri "Gözlemci" yaptým. Sipariþ bitince sistem uyarý veriyor, abone olan servisler kendi iþini yapýyor.
 
-Final Mimari Diyagramým (UML)
-
+# Final Mimari Diyagramým (UML);
 
 ```mermaid
 classDiagram
-    %% Strategy
+    %% Çekirdek Sýnýflar
+    class Urun {
+        +getTabanFiyat()
+        +getKategori()
+    }
+    class Musteri {
+        +getUyelikTipi()
+        +getEposta()
+    }
+
+    %% FAZ 1: Factory Method
+    class Hesaplayici {
+        <<abstract>>
+        +islem_yap()
+    }
     class IndirimHesaplayici {
         +strateji_belirle()
         +islem_yap()
     }
+    class KargoHesaplayici {
+        +islem_yap()
+    }
+    class ServisFabrikasi {
+        +servis_olustur()
+    }
+    Hesaplayici <|-- IndirimHesaplayici
+    Hesaplayici <|-- KargoHesaplayici
+    ServisFabrikasi ..> Hesaplayici : Üretir
+
+    %% FAZ 3: Strategy (Ýndirim Hesaplayýcý Kullanýr)
     class IndirimStratejisi {
         <<interface>>
         +indirim_hesapla()
     }
     class TeknofestIndirimi
-    IndirimHesaplayici o-- IndirimStratejisi : Kullanýr
+    class VizeHaftasiIndirimi
+    class HosgeldinIndirimi
+    class IndirimYokStratejisi
     IndirimStratejisi <|-- TeknofestIndirimi
+    IndirimStratejisi <|-- VizeHaftasiIndirimi
+    IndirimStratejisi <|-- HosgeldinIndirimi
+    IndirimStratejisi <|-- IndirimYokStratejisi
+    IndirimHesaplayici o-- IndirimStratejisi : Strateji Kullanýr
 
-    %% Decorator
+    %% FAZ 2: Decorator
     class SepetBileseni {
         <<interface>>
         +get_toplam()
+        +get_detay()
     }
-    class SepetDecorator {
-        +get_toplam()
-    }
+    class StandartSepet
+    class SepetDecorator
+    class HediyePaketiDecorator
+    class SigortaDecorator
+    SepetBileseni <|-- StandartSepet
     SepetBileseni <|-- SepetDecorator
     SepetDecorator o-- SepetBileseni : Sarmalar
+    SepetDecorator <|-- HediyePaketiDecorator
+    SepetDecorator <|-- SigortaDecorator
 
-    %% Adapter & Proxy
+    %% FAZ 2: Adapter & Proxy
     class OdemeArayuzu {
         <<interface>>
         +odeme_al()
     }
+    class IyzicoDisSistem {
+        +iyzico_ile_ode()
+    }
     class IyzicoAdapter
     class OdemeKontrolProxy
     OdemeArayuzu <|-- IyzicoAdapter
+    IyzicoAdapter --> IyzicoDisSistem : Adapte Eder
     OdemeArayuzu <|-- OdemeKontrolProxy
     OdemeKontrolProxy o-- OdemeArayuzu : Kontrol Eder
 
-    %% Observer
+    %% FAZ 3: Observer
     class SiparisYayincisi {
         +abone_ekle()
         +abonelere_bildir()
@@ -78,14 +115,29 @@ classDiagram
         +guncelle()
     }
     class EmailBildirimci
-    SiparisYayincisi o-- Gozlemci : Bildirir
+    class SMSBildirimci
+    class KargoSirketiBildirimci
+    SiparisYayincisi o-- Gozlemci : Aboneleri Tetikler
     Gozlemci <|-- EmailBildirimci
+    Gozlemci <|-- SMSBildirimci
+    Gozlemci <|-- KargoSirketiBildirimci
 
+    %% Ana Sistem / Context
+    class ETicaretUygulamasi {
+        +sepeteEkle()
+        +siparisiTamamla()
+    }
+    ETicaretUygulamasi --> ServisFabrikasi : Servis Ýster
+    ETicaretUygulamasi --> OdemeArayuzu : Ödeme Yapar
+    ETicaretUygulamasi --> SiparisYayincisi : Bildirim Baþlatýr
+    ETicaretUygulamasi *-- Urun : Ýçerir
+    ETicaretUygulamasi --> Musteri : Sahiplik
+```
 
-Nasýl Çalýþtýrýlýr?
+# Nasýl Çalýþtýrýlýr?
 
-1.Bilgisayarýnýzda Python 3.x kurulu olduðundan emin olun.
+Bilgisayarýnýzda Python 3.x kurulu olduðundan emin olun.
 
-2.Komut satýrýndan projenin ana dizinine gidin.
+Komut satýrýndan projenin ana dizinine gidin.
 
-3.python src/sepet.py komutu ile uygulamayý çalýþtýrýp konsoldaki sipariþ adýmlarýný ve örüntü loglarýný inceleyebilirsiniz.
+python src/spagetti_code.py komutu ile uygulamayý çalýþtýrýp konsoldaki sipariþ adýmlarýný ve örüntü loglarýný inceleyebilirsiniz.
